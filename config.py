@@ -1,14 +1,20 @@
 """ Contains configuration attributes used during preprocessing and training. """
+from re import X
 import numpy as np
 from multiprocessing import cpu_count
 from tensorflow.keras import  regularizers
 import os
+from datetime import datetime
 
 
 class Period:
-    def __init__(self, low, high): 
-        self.low = low
-        self.high = high
+    def __init__(self, low, high, dt_format="%y/%m/%d"): 
+        self.low = datetime.strptime(low, format=dt_format)
+        self.high = datetime.strptime(high, format=dt_format)
+
+    def contains(self, x):
+        return x >= self.low and  x <= self.high  
+
 
 
 
@@ -23,11 +29,8 @@ def load_config(exp_id):
     """ 
     **************************************** Paths **************************************** 
     """
-    cfg.training_path = os.path.join("data", "train")
-    cfg.testing_path = os.path.join("data", "test")
-    cfg.validation_path = os.path.join("data", "validation")
+    cfg.data_path = os.path.join("data", "Bitcoin_tweets.csv")
     cfg.save_path = os.path.join("models", "saved_models")
-    cfg.save_path_weights = os.path.join("models", "saved_weights")
     """ 
     ************************************************************************************************
     """ 
