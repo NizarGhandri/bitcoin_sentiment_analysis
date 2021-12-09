@@ -8,9 +8,9 @@ from datetime import datetime
 
 
 class Period:
-    def __init__(self, low, high, dt_format="%y/%m/%d"): 
-        self.low = datetime.strptime(low, format=dt_format)
-        self.high = datetime.strptime(high, format=dt_format)
+    def __init__(self, low, high, dt_format="%Y-%m-%d"): 
+        self.low = datetime.strptime(low, dt_format)
+        self.high = datetime.strptime(high, dt_format)
 
     def contains(self, x):
         return x >= self.low and  x <= self.high  
@@ -39,12 +39,13 @@ def load_config(exp_id):
 
     """ Data Fetcher """
 
-    intervals = [("2020-02-01"-"2020-05-01"), ("2021-05-01", "2021-08-02")] #n'importe quoi
+    intervals = [("2021-02-01", "2021-05-01"), ("2021-05-01", "2021-08-02")] #n'importe quoi
     cfg.periods = list(map(lambda x: Period(*x), intervals))
     cfg.stock_name = "Bitcoin"
     cfg.max_tweets_per_worker = 1000
     cfg.stock = "BTC"
     cfg.ticker_interval = "12h"
+    cfg.timestep_size = 2
 
     """ Dataset """  
     # rescaling parameters

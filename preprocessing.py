@@ -1,40 +1,46 @@
 import numpy as np
 import re
 from transformers import pipeline
+import pandas as pd
+import dask.dataframe as dd
+import threading
 
 
 
 class TweetPreprocessor(object): 
 
     
-    def __init__(self, cfg) -> None:
-        self.cfg = cfg
+    def __init__(self, _cfg) -> None:
+        self._cfg = _cfg
         self.preprocessing = list(map(lambda f: getattr(self, f), filter(lambda method: not method.startswith('_'), dir(self))))
+        print(self.preprocessing)
     
     
     
     def __call__(self, x):
         for func in self.preprocessing: 
-            x = func(x)
-        return x.reset_index(drop=True).groupby("period")
+            x = func(x).reset_index(drop=True)
+        return x.groupby("period")
 
 
 
     def filter_in_periods(self, x):
-        x["period"] = x.date.apply(self.in_period)
+        x.loc[:,"date"] = pd.to_datetime(x["date"], errors="coerce", infer_datetime_format=True)
+        x.loc[:,"period"] = x.date.apply(self._in_period)
         return x.dropna(subset=['period'])
 
 
     def remove_bots(self, x):
-        x["source"]= x["source"].apply(str).str.lower()
+        x.loc[:, "source"]= x["source"].apply(str).str.lower()
         x = x[~x["source"].str.contains("bot")]
         return x
 
     def preprocess_tweet_text(self, x):
-        x["text"] = x["text"].apply(str).apply(self._process_tweet)
+        x.loc[:, "text"] = x["text"].apply(str).apply(self._process_tweet)
+        return x
 
-    def numeric_verified(x):
-        x['user_verified'] = x['user_verified'].apply(lambda u: int(u =='True'))
+    #def numeric_verified(x):
+    #    x['user_verified'] = x['user_verified'].apply(lambda u: int(u =='True'))
 
     def _process_tweet(self, tweet): #start process_tweet
         # process the tweets
@@ -52,8 +58,14 @@ class TweetPreprocessor(object):
         return tweet
 
     def summon_bert(self, x):
-        pipe = pipeline("text-classification", model="distilbert-base-uncased-finetuned-sst-2-english")
-        x["sentiment_score"] = x.text.apply(pipe).apply(self._get_score)
+        pipe = pipeline("text-classification", model="distilbert-base-uncased-finetuned-sst-2-english", return_all_scores=False)
+        partitioned_dask = dd.from_pandas(x.text, npartitions=30)
+        def checked_parallel_apply(x):
+            print("thread", threading.get_ident(), "starts")
+            df = x.apply(pipe)
+            print("thread", threading.get_ident(), "done")
+            return df
+        x["sentiment_score"] = partitioned_dask.map_partitions(checked_parallel_apply).compute(scheduler='threads')
         return x
 
     def _get_score(self, score): 
@@ -64,7 +76,7 @@ class TweetPreprocessor(object):
 
         
     def _in_period(self, dt):
-        period = list(filter(lambda p: p[1].contains(dt), enumerate(self.cfg.periods))) 
+        period = list(filter(lambda p: p[1].contains(dt), enumerate(self._cfg.periods))) 
         return period[0][0] if len(period) else np.NaN
 
 
@@ -73,3 +85,11 @@ class Factors(object):
 
     def __call__(x):
         return x
+
+
+    #Moving Average Convergence Divergence (MACD), 
+    #Relative Strength Index (RSI), 
+    #Bollinger Bands, 
+    #On Balance Volume (OBV),
+    #Google Search Interest,
+    #Active supply Bitcoin

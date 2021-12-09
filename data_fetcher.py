@@ -1,19 +1,18 @@
 from concurrent.futures import ThreadPoolExecutor
 from concurrent.futures import as_completed
-import got3
 import pandas as pd
 import yfinance as yf
-from keras import utils
+from tensorflow.keras.utils import Sequence
 
 from preprocessing import Factors, TweetPreprocessor
 
 
-class TweetGenerator(utils.Sequence): 
+class TweetGenerator(Sequence): 
 
     def __init__(self, config, pre_process=True):
         self.cfg = config
         self.pre_process = pre_process
-        self.preprocessor = TweetPreprocessor()
+        self.preprocessor = TweetPreprocessor(self.cfg)
         self.data = self._load_data()
         self._size = self.cfg.periods * self.cfg.timestep_size
         
@@ -28,7 +27,7 @@ class TweetGenerator(utils.Sequence):
 
 
     def _load_data(self): 
-        data = pd.read_csv(self.cfg.data_path, infer_datetime_format=True, memory_map=True, low_memory=False)
+        data = pd.read_csv(self.cfg.data_path, infer_datetime_format=True)
         data = data.dropna(subset=['text']).reset_index(drop=True)
         return self.preprocess(data) if self.pre_process else data
 
@@ -40,7 +39,7 @@ class TweetGenerator(utils.Sequence):
     
 
 
-class MarketAndPriceGenerator(utils.Sequence):
+class MarketAndPriceGenerator(Sequence):
 
     def __init__ (self, generate, cfg):
         self.cfg = cfg
@@ -74,13 +73,13 @@ class MarketAndPriceGenerator(utils.Sequence):
    
 
 
-class Dataset(utils.Sequence):
+class Dataset(Sequence):
 
     def __init__(self, config, max_workers=8, pre_process_on_the_fly=False):
         self.cfg = config
         self.on_the_fly = pre_process_on_the_fly
-        self.tweets = TweetGenerator(not pre_process_on_the_fly)
-        self.prices_marketindicators = MarketAndPriceGenerator(not pre_process_on_the_fly)
+        self.tweets = TweetGenerator(self.cfg, not pre_process_on_the_fly)
+        self.prices_marketindicators = MarketAndPriceGenerator(self.cfg, not pre_process_on_the_fly)
         self.max_workers = max_workers
         self._size = len(TweetGenerator)
 
