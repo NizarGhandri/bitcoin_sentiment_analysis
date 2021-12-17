@@ -3,54 +3,81 @@ from concurrent.futures import as_completed
 import pandas as pd
 import yfinance as yf
 from tensorflow.keras.utils import Sequence
+import os
 
 from preprocessing import Factors, TweetPreprocessor
 
 
 class TweetGenerator(Sequence): 
 
-    def __init__(self, config, pre_process=True):
+    def __init__(self, mode, config, pre_process=True, return_all_features=False, name_preprocessed="preprocessed.csv"):
         self.cfg = config
+        self.mode = mode
         self.pre_process = pre_process
+        self.path_preprocessed = os.path.join(self.cfg.preprocessed_path, name_preprocessed)
         self.preprocessor = TweetPreprocessor(self.cfg)
         self.data = self._load_data()
-        self._size = self.cfg.periods * self.cfg.timestep_size
+        self.return_all = return_all_features
+        if(pre_process):
+            self.save()
+        
         
 
     def __len__(self):
         'Denotes the number of batches per epoch'
-        return self._size//self.cfg.batch_size + 1
+        return len(self.data.loc[self.mode.value])//self.cfg.batch_size + 1
 
     def __getitem__(self, index):
-        tmp_data = self.data.iloc[index]
-        return tmp_data if self.pre_process else self.preprocess(tmp_data)
+        data = self.data.loc[self.mode.value, :] if self.return_all else self.data.loc[self.mode.value, "sentiment_score"]
+        return data.iloc[index]
 
 
-    def _load_data(self): 
-        data = pd.read_csv(self.cfg.data_path, infer_datetime_format=True)
-        data = data.dropna(subset=['text']).reset_index(drop=True)
-        return self.preprocess(data) if self.pre_process else data
+    def _load_data(self):
+        if (self.pre_process): 
+            data = pd.read_csv(self.cfg.data_path, infer_datetime_format=True)
+            data = self.preprocess(data.dropna(subset=['text']).reset_index(drop=True))
+        else:
+            data = pd.read_csv(self.path_preprocessed, infer_datetime_format=True, index_col=[0, 1], header = [0,1])
+            data = self.missing_value_policy(data.rename(columns = {'Unnamed: 2_level_1':  ''}, level=1))
+        return data
 
 
     def preprocess(self, x):
         return self.preprocessor(x)
-    
+
+    def save(self):
+        if (not os.path.exists(self.cfg.preprocessed_path)):
+            os.mkdir(self.cfg.preprocessed_path)
+        
+        self.data.to_csv(self.path_preprocessed)
+        
+        return self.path_preprocessed
+
+    def missing_value_policy(self, df):
+        if self.cfg.policy == "Interpolate":    
+            for i in range(2, self.cfg.past_values+1):
+                df.loc[:, ("sentiment_score", "mean_n_"+str(i))] = df.loc[:, ("sentiment_score", "mean_n_"+str(i))].fillna(method="bfill", limit=self.cfg.past_values-1)
+
+        return df.dropna()
+
+
 
     
 
+    
 
-class MarketAndPriceGenerator(Sequence):
 
-    def __init__ (self, generate, cfg):
+class ReturnFactorsGenerator(Sequence):
+
+    def __init__ (self, cfg, generate):
         self.cfg = cfg
         self.factors_generator = Factors()
         self.generate = generate
-        self._size = self.cfg.periods * self.cfg.timestep_size
         self.data = self._load_data()
 
 
     def __len__(self):
-        return self._size//self.cfg.batch_size + 1
+        return len(self.data)//self.cfg.batch_size + 1
 
 
     def __getitem__(self, index):

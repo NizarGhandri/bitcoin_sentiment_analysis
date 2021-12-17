@@ -5,6 +5,7 @@ from multiprocessing import cpu_count
 from tensorflow.keras import  regularizers
 import os
 from datetime import datetime
+from torch.cuda import is_available
 
 
 class Period:
@@ -30,22 +31,27 @@ def load_config(exp_id):
     **************************************** Paths **************************************** 
     """
     cfg.data_path = os.path.join("data", "Bitcoin_tweets.csv")
+    cfg.preprocessed_path = os.path.join("data", "preprocessed")
     cfg.save_path = os.path.join("models", "saved_models")
     """ 
     ************************************************************************************************
     """ 
 
-    #cfg.device =  "cuda" if is_available() else "cpu"
+
+    cfg.cuda = is_available()
+    cfg.device =  "cuda" if cfg.cuda else "cpu"
 
     """ Data Fetcher """
 
-    intervals = [("2021-02-01", "2021-05-01"), ("2021-05-01", "2021-08-02")] #n'importe quoi
+    intervals = [("2021-02-01", "2021-10-24"), ("2021-10-25", "2021-11-07"), ("2021-11-08", "2021-11-26")] 
     cfg.periods = list(map(lambda x: Period(*x), intervals))
     cfg.stock_name = "Bitcoin"
     cfg.max_tweets_per_worker = 1000
     cfg.stock = "BTC"
-    cfg.ticker_interval = "12h"
+    cfg.ticker_interval = '12h'
     cfg.timestep_size = 2
+    cfg.past_values = 3
+    cfg.policy = "Interpolate"
 
     """ Dataset """  
     # rescaling parameters
