@@ -13,5 +13,6 @@ To run the project run the following commands:
     - If you are running Unix ``` source mypython/bin/activate ``` or Windows ``` mypthon\Scripts\activate ```
     - Run ``` pip install -r requirements.txt ```
 
+Also add the data file "Bitcoin_tweets.csv" in the data folder. You can download it from [here] (https://www.kaggle.com/alexandrayuliu/bitcoin-tweets-sentiment-analysis/data)
 
 Afterwards simply run the Baseline.ipynb.
