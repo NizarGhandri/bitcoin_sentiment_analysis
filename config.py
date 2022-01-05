@@ -45,9 +45,9 @@ def load_config(exp_id):
 
     intervals = [("2021-02-01", "2021-10-24"), ("2021-10-25", "2021-11-07"), ("2021-11-08", "2021-11-26")] 
     cfg.periods = list(map(lambda x: Period(*x), intervals))
-    cfg.stock_name = "Bitcoin"
+    cfg.keyw = ["Bitcoin"]
     cfg.max_tweets_per_worker = 1000
-    cfg.stock = "BTC"
+    cfg.stock = "BTC-USD"
     cfg.ticker_interval = '12h'
     cfg.timestep_size = 2
     cfg.past_values = 3
