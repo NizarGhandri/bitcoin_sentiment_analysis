@@ -1,9 +1,9 @@
-from models.model import Model
+from models.model import BaseModel
 import statsmodels.api as sm
 import pandas as pd
 
 
-class Varmax(Model): 
+class Varmax(BaseModel): 
 
 
     def __init__ (self, generator, cfg, **kwargs): 
@@ -34,8 +34,3 @@ class Varmax(Model):
 
 
 
-mod = 
-res = mod.fit(maxiter=1000, disp=False)
-print(res.summary())
-final_data["log_returns"].plot()
-plt.plot(res.predict())

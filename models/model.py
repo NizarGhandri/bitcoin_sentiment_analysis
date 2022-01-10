@@ -1,9 +1,12 @@
 from abc import ABC, abstractmethod
 import matplotlib.pyplot as plt
 
+from metrics import Metrics
+import pandas as pd
+import numpy as np
 
 
-class Model(ABC): 
+class BaseModel(ABC): 
 
 
     def __init__ (self, generator, cfg, **kwargs): 
@@ -38,6 +41,10 @@ class Model(ABC):
         ax[1].legend()
         ax[1].grid()
 
+    def evaluate(self): 
+        y_pred, y_true = self.predict(self.generator.X_test), self.generator.y_test.values
+        MAE, acc = np.mean(np.abs(y_pred - y_true)), np.mean((y_pred * y_true) > 0)
+        return pd.DataFrame({"MAE": [MAE], "ACCURACY": [acc]}).set_index([["model"]])
 
 
     

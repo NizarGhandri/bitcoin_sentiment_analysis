@@ -1,9 +1,9 @@
-from models.model import Model
+from models.model import BaseModel
 import statsmodels.api as sm
 
 
 
-class LinearRegression(Model): 
+class LinearRegression(BaseModel): 
 
 
     def __init__ (self, generator, cfg, **kwargs): 
@@ -24,7 +24,7 @@ class LinearRegression(Model):
 
     
     def predict (self, X, online=True):
-        return self.model.predict(sm.add_constant(X))
+        return self.model.predict(sm.add_constant(X)).values
 
 
 
