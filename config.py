@@ -110,6 +110,8 @@ def load_config(exp_id):
     cfg.alpha = 0.3
     cfg.last_activation = "softmax"
     cfg.loss = "binary_crossentropy"
+    cfg.params = {"reg_lambda" : 0.005, "max_depth" : 1, "n_estimators" : 30}
+    cfg.l = [0, 0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1]
     
     """ Optimizer """
     cfg.optimizer = "adam"

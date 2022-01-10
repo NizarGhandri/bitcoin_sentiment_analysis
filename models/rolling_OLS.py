@@ -1,8 +1,8 @@
-from models.model import Model
+from models.model import BaseModel
 from statsmodels.regression.rolling import RollingOLS
 import statsmodels.api as sm
 
-class RollingLinearRegression(Model): 
+class RollingLinearRegression(BaseModel): 
 
 
     def __init__ (self, generator, cfg, **kwargs): 

@@ -152,10 +152,10 @@ class Factors(object):
 
 
     def MACD_and_signal_MACD(self, x):
-        exp1 = x["Close"].ewm(span=12, adjust=False).mean()
-        exp2 = x["Close"].ewm(span=26, adjust=False).mean()
+        exp1 = x["Close"].ewm(span=6, adjust=False).mean()
+        exp2 = x["Close"].ewm(span=13, adjust=False).mean()
         macd = exp1 - exp2
-        x["signal_macd"] = macd.ewm(span=9, adjust=False).mean()
+        x["signal_macd"] = macd.ewm(span=4, adjust=False).mean()
         return x, "signal_macd"
 
     def _get_returns(self, x):

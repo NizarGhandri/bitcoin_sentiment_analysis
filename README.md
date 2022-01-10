@@ -15,4 +15,4 @@ To run the project run the following commands:
 
 Also add the data file "Bitcoin_tweets.csv" in the data folder. You can download it from [here](https://www.kaggle.com/alexandrayuliu/bitcoin-tweets-sentiment-analysis/data)
 
-Afterwards simply run the Baseline.ipynb.
+Afterwards simply run the Execution.ipynb.

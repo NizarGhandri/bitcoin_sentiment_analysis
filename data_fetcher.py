@@ -4,6 +4,7 @@ import pandas as pd
 import yfinance as yf
 from tensorflow.keras.utils import Sequence
 import os
+import numpy as np
 
 from preprocessing import Factors, TweetPreprocessor
 
@@ -91,7 +92,6 @@ class ReturnFactorsGenerator(Sequence):
             end=self.cfg.periods[-1].high,
             interval="1h" #self.cfg.ticker_interval
         ).reset_index().rename(columns={"index": "date"})[["date", "Close"]]
-        print(len(stock_history))
         return self.generate_factors(stock_history) if self.generate else stock_history
 
 
@@ -136,7 +136,13 @@ class Dataset(Sequence):
         #        data = executor.map(self.fetch, self.cfg.periods)
         #else:
         #    data = pd.concat(list(map(self.fetch, self.cfg.periods)))
-        return self.data.iloc[index], self.y.iloc[index]
+        df = self.data.iloc[index]
+        std = np.array(df["sentiment_score_std"])
+        sentiment =  df[["sentiment_score_mean_n_1", "sentiment_score_mean_n_2", 'sentiment_score_mean_n_3']].values[..., np.newaxis].astype('float32')
+        ret =  df[["log_returns_n_1", 'log_returns_n_2', 'log_returns_n_3']].values[..., np.newaxis].astype('float32')
+        macd = df[['signal_macd_n_1', 'signal_macd_n_2', 'signal_macd_n_3']].values[..., np.newaxis].astype('float32')
+        rsi = df[['rsi_n_1', 'rsi_n_2', 'rsi_n_3']].values[..., np.newaxis].astype('float32')
+        return [std, sentiment, ret, macd, rsi], self.y.iloc[index]
 
     def fetch(self):
         pass
